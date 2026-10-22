@@ -1,0 +1,13 @@
+{
+  "name": "bitacora-cli",
+  "version": "1.0.0",
+  "description": "Aplicación de consola para una bitacora de notas diarias, con respaldos y sin notas perdidas",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "keywords": [],
+  "author": "Ana Maria Deossa Serna",
+  "license": "ISC",
+  "type": "commonjs"
+}
