@@ -1,4 +1,11 @@
-const { agregarNota, listarNotas, buscarNotas, borrarNota } = require('./notas');
+const {
+  agregarNota,
+  listarNotas,
+  buscarNotas,
+  borrarNota,
+  respaldarNotas,
+  exportarNotas,
+} = require('./notas');
 const { registrarAccion } = require('./almacen');
 const { formatearFechaLarga, formatearFechaCorta } = require('./fechas');
 
@@ -11,15 +18,16 @@ Comandos:
   listar [N]                     Muestra las últimas N notas (por defecto 5)
   buscar <palabra>               Busca notas que contengan la palabra
   borrar <id>                    Elimina la nota con ese id
+  respaldar                      Copia las notas a respaldos/notas_<marca-de-tiempo>.json
+  exportar [carpeta]             Exporta las notas a un .txt en una ruta absoluta
+                                 (por defecto, tu carpeta personal)
   ayuda                          Muestra esta ayuda`;
 
 function formatearNota(nota) {
   return `[${nota.id}] (${nota.etiqueta}) ${formatearFechaCorta(nota.fecha)} — ${nota.texto}`;
 }
 
-// Cada caso devuelve { mensaje, resultado }:
-//   mensaje   -> lo que se le muestra al usuario
-//   resultado -> resumen de una sola línea para data/bitacora.log
+
 function ejecutar() {
   switch (comando) {
     case 'agregar': {
@@ -83,6 +91,23 @@ function ejecutar() {
         : { mensaje: `No existe ninguna nota con el id ${id}.`, resultado: `id [${id}] inexistente` };
     }
 
+    case 'respaldar': {
+      const archivo = respaldarNotas();
+      return { mensaje: `Respaldo creado: ${archivo}`, resultado: `respaldo creado en ${archivo}` };
+    }
+
+    case 'exportar': {
+      const carpeta = argumentos.join(' ').trim();
+      const r = exportarNotas(carpeta);
+      if (!r.ok) {
+        return { mensaje: `${r.motivo} No se movió nada.`, resultado: `exportación rechazada: ${r.motivo}` };
+      }
+      return {
+        mensaje: `Exportadas ${r.total} nota(s) en ${r.archivo}`,
+        resultado: `exportadas ${r.total} nota(s) a ${r.archivo}`,
+      };
+    }
+
     case 'ayuda':
       return { mensaje: TEXTO_AYUDA, resultado: 'ayuda mostrada' };
 
@@ -97,7 +122,6 @@ function ejecutar() {
   }
 }
 
-// La bitácora nunca debe ser la causa de que el programa se rompa
 function anotarEnLog(nombre, resultado) {
   try {
     registrarAccion(nombre, resultado);

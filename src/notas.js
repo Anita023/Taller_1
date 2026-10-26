@@ -1,5 +1,13 @@
 const hash = require('object-hash');
-const { leerNotas, guardarNotas } = require('./almacen');
+const {
+  leerNotas,
+  guardarNotas,
+  respaldarNotas: copiarRespaldo,
+  validarCarpetaDestino,
+  escribirExportacion,
+  moverArchivo,
+} = require('./almacen');
+const { formatearFechaLarga } = require('./fechas');
 
 function agregarNota(texto, etiqueta) {
   const notas = leerNotas();
@@ -10,7 +18,6 @@ function agregarNota(texto, etiqueta) {
     return { ok: false, nota: repetida };
   }
 
-  // Si la etiqueta no viene (o viene vacía), se usa "general"
   const etiquetaFinal = (etiqueta || '').trim() || 'general';
   const nota = { id, texto, etiqueta: etiquetaFinal, fecha: Date.now() };
   notas.push(nota);
@@ -39,4 +46,37 @@ function borrarNota(id) {
   return true;
 }
 
-module.exports = { agregarNota, listarNotas, buscarNotas, borrarNota };
+function respaldarNotas() {
+  return copiarRespaldo();
+}
+
+function armarTextoExportacion(notas) {
+  const encabezado = `BITÁCORA — exportación generada el ${formatearFechaLarga(Date.now())}\nTotal de notas: ${notas.length}\n`;
+  const cuerpo = notas
+    .map((n) => `\n[${n.id}] (${n.etiqueta}) ${formatearFechaLarga(n.fecha)}\n  ${n.texto}`)
+    .join('\n');
+  return `${encabezado}${cuerpo}\n`;
+}
+
+function exportarNotas(carpeta) {
+  const validacion = validarCarpetaDestino(carpeta);
+  if (!validacion.ok) return validacion;
+
+  const notas = leerNotas();
+  if (notas.length === 0) {
+    return { ok: false, motivo: 'No hay notas para exportar.' };
+  }
+
+  const origen = escribirExportacion(armarTextoExportacion(notas));
+  const archivo = moverArchivo(origen, validacion.carpeta);
+  return { ok: true, archivo, total: notas.length };
+}
+
+module.exports = {
+  agregarNota,
+  listarNotas,
+  buscarNotas,
+  borrarNota,
+  respaldarNotas,
+  exportarNotas,
+};
