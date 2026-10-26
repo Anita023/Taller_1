@@ -9,5 +9,8 @@
   "keywords": [],
   "author": "Ana Maria Deossa Serna",
   "license": "ISC",
-  "type": "commonjs"
+  "type": "commonjs",
+  "dependencies": {
+    "object-hash": "^3.0.0"
+  }
 }
