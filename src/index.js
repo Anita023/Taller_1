@@ -7,7 +7,7 @@ const {
   exportarNotas,
 } = require('./notas');
 const { registrarAccion } = require('./almacen');
-const { formatearFechaLarga, formatearFechaCorta } = require('./fechas');
+const { getLongTime, getShortDate } = require('fechas-bitacora-anita023');
 
 const [comando, ...argumentos] = process.argv.slice(2);
 
@@ -24,10 +24,12 @@ Comandos:
   ayuda                          Muestra esta ayuda`;
 
 function formatearNota(nota) {
-  return `[${nota.id}] (${nota.etiqueta}) ${formatearFechaCorta(nota.fecha)} — ${nota.texto}`;
+  return `[${nota.id}] (${nota.etiqueta}) ${getShortDate('es-ES', nota.fecha)} — ${nota.texto}`;
 }
 
-
+// Cada caso devuelve { mensaje, resultado }:
+//   mensaje   -> lo que se le muestra al usuario
+//   resultado -> resumen de una sola línea para data/bitacora.log
 function ejecutar() {
   switch (comando) {
     case 'agregar': {
@@ -39,7 +41,7 @@ function ejecutar() {
       }
       const { ok, nota } = agregarNota(texto, etiqueta);
       const mensaje = ok
-        ? `Nota guardada [${nota.id}] (${nota.etiqueta}) — ${formatearFechaLarga(nota.fecha)}`
+        ? `Nota guardada [${nota.id}] (${nota.etiqueta}) — ${getLongTime('es-ES', nota.fecha)}`
         : `Ya existe una nota igual (id ${nota.id}). No se guardó.`;
       const resultado = ok ? `nota guardada [${nota.id}]` : `duplicada de [${nota.id}], no se guardó`;
       return { mensaje, resultado };
@@ -122,6 +124,7 @@ function ejecutar() {
   }
 }
 
+// La bitácora nunca debe ser la causa de que el programa se rompa
 function anotarEnLog(nombre, resultado) {
   try {
     registrarAccion(nombre, resultado);

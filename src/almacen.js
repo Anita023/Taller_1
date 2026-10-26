@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const { formatearFechaLarga } = require('./fechas');
+const { getLongTime } = require('fechas-bitacora-anita023');
 
 const DIR_DATA = path.join(__dirname, '..', 'data');
 const DIR_RESPALDOS = path.join(__dirname, '..', 'respaldos');
@@ -39,11 +39,13 @@ function guardarNotas(notas) {
 
 function registrarAccion(comando, resultado) {
   asegurarArchivo();
-  const linea = `${formatearFechaLarga(Date.now())} | ${comando} | ${resultado}\n`;
+  const linea = `${getLongTime('es-ES', Date.now())} | ${comando} | ${resultado}\n`;
   fs.appendFileSync(ARCHIVO_LOG, linea);
 }
 
+// ---------- Parte 3: respaldo y exportación ----------
 
+// Copia data/notas.json a respaldos/notas_<marca-de-tiempo>.json
 function respaldarNotas() {
   asegurarArchivo();
   if (!fs.existsSync(DIR_RESPALDOS)) {
@@ -54,6 +56,7 @@ function respaldarNotas() {
   return destino;
 }
 
+// Revisa que la carpeta destino sirva. Devuelve { ok, carpeta } o { ok: false, motivo }
 function validarCarpetaDestino(carpeta) {
   const destino = carpeta || os.homedir();
   if (!path.isAbsolute(destino)) {
@@ -68,7 +71,7 @@ function validarCarpetaDestino(carpeta) {
   return { ok: true, carpeta: destino };
 }
 
-
+// Escribe el texto en salida/exportacion.txt y devuelve la ruta del archivo
 function escribirExportacion(texto) {
   if (!fs.existsSync(DIR_SALIDA)) {
     fs.mkdirSync(DIR_SALIDA, { recursive: true });
@@ -78,6 +81,8 @@ function escribirExportacion(texto) {
   return archivo;
 }
 
+// Mueve un archivo. Si origen y destino están en discos distintos,
+// renameSync falla con EXDEV: en ese caso se copia y luego se borra el original.
 function moverArchivo(origen, carpetaDestino) {
   const destino = path.join(carpetaDestino, path.basename(origen));
   try {

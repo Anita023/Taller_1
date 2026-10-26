@@ -7,7 +7,7 @@ const {
   escribirExportacion,
   moverArchivo,
 } = require('./almacen');
-const { formatearFechaLarga } = require('./fechas');
+const { getLongTime } = require('fechas-bitacora-anita023');
 
 function agregarNota(texto, etiqueta) {
   const notas = leerNotas();
@@ -18,6 +18,7 @@ function agregarNota(texto, etiqueta) {
     return { ok: false, nota: repetida };
   }
 
+  // Si la etiqueta no viene (o viene vacía), se usa "general"
   const etiquetaFinal = (etiqueta || '').trim() || 'general';
   const nota = { id, texto, etiqueta: etiquetaFinal, fecha: Date.now() };
   notas.push(nota);
@@ -51,13 +52,14 @@ function respaldarNotas() {
 }
 
 function armarTextoExportacion(notas) {
-  const encabezado = `BITÁCORA — exportación generada el ${formatearFechaLarga(Date.now())}\nTotal de notas: ${notas.length}\n`;
+  const encabezado = `BITÁCORA — exportación generada el ${getLongTime('es-ES', Date.now())}\nTotal de notas: ${notas.length}\n`;
   const cuerpo = notas
-    .map((n) => `\n[${n.id}] (${n.etiqueta}) ${formatearFechaLarga(n.fecha)}\n  ${n.texto}`)
+    .map((n) => `\n[${n.id}] (${n.etiqueta}) ${getLongTime('es-ES', n.fecha)}\n  ${n.texto}`)
     .join('\n');
   return `${encabezado}${cuerpo}\n`;
 }
 
+// Devuelve { ok: true, archivo, total } o { ok: false, motivo }
 function exportarNotas(carpeta) {
   const validacion = validarCarpetaDestino(carpeta);
   if (!validacion.ok) return validacion;
